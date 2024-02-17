@@ -1,5 +1,5 @@
 require('dotenv').config();
-require('./db/mongoose'); // Asegúrate de que la ruta esté correcta
+require('./db/mongose'); // Asegúrate de que la ruta esté correcta
 const express = require('express');
 const app = express();
 
