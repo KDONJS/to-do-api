@@ -18,6 +18,23 @@ exports.listarTareas = async (req, res) => {
       res.status(400).send(error);
     }
   };
+
+  exports.crearSubtarea = async (req, res) => {
+    try {
+
+      const tarea = await Tarea.findById(req.params.id);
+      if (!tarea) {
+        return res.status(404).send({ error: 'Tarea no encontrada.' });
+      }
+  
+      tarea.subtareas.push(req.body);
+  
+      await tarea.save();
+      res.status(201).send(tarea);
+    } catch (error) {
+      res.status(400).send(error);
+    }
+  };
   
   exports.actualizarTarea = async (req, res) => {
     try {
