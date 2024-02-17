@@ -1,12 +1,19 @@
 require('dotenv').config();
-require('./db/mongose');
+require('./db/mongoose'); // Asegúrate de que la ruta esté correcta
 const express = require('express');
 const app = express();
-const tareasRoutes = require('./routers/tareasRoutes')
+
+// Importa los enrutadores
+const tareasRoutes = require('./routers/tareasRoutes');
+const authRoutes = require('./routers/authRoutes'); // Asegúrate de que esta ruta esté correcta
 
 app.use(express.json());
-app.use('/api/tareas', tareasRoutes);
 
+// Usa los enrutadores con su ruta base respectiva
+app.use('/api/tareas', tareasRoutes);
+app.use('/api/auth', authRoutes); // Añade esta línea para incluir las rutas de autenticación
+
+// Ruta de bienvenida
 app.get('/', (req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -29,4 +36,4 @@ app.get('/', (req, res) => {
   `);
 });
   
-  module.exports = app;
+module.exports = app;
