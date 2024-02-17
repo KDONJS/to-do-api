@@ -31,7 +31,7 @@ exports.iniciarSesionUsuario = async (req, res) => {
     console.log('Password de la petición:', req.body.password);
     console.log('Hash de la contraseña en la base de datos:', usuario.password);
 
-    const isMatch = await bcrypt.compare(req.body.password, usuario.password);
+    const isMatch = bcrypt.compareSync(req.body.password, usuario.password);
     if (!isMatch) {
       console.log('Contraseña incorrecta para el usuario:', req.body.email);
       return res.status(400).send({ error: 'Datos de inicio de sesión inválidos' });
