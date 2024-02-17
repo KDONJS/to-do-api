@@ -24,26 +24,30 @@ exports.registrarUsuario = async (req, res) => {
 };
 
 exports.iniciarSesionUsuario = async (req, res) => {
-    try {
-      // Buscar el usuario por email
-      const usuario = await Usuario.findOne({ email: req.body.email });
-      if (!usuario) {
-        return res.status(400).send({ error: 'Datos de inicio de sesión inválidos' });
-      }
-  
-      // Verificar la contraseña
-      const isMatch = await bcrypt.compare(req.body.password, usuario.password);
-      if (!isMatch) {
-        return res.status(400).send({ error: 'Datos de inicio de sesión inválidos' });
-      }
-  
-      // Crear un token para el usuario existente
-      const token = jwt.sign({ _id: usuario._id.toString() }, process.env.JWT_SECRET);
-  
-      // Enviar el perfil del usuario y el token como respuesta
-      res.send({ usuario, token });
-    } catch (error) {
-      res.status(500).send(error);
+  try {
+    // Buscar el usuario por email
+    const usuario = await Usuario.findOne({ email: req.body.email });
+    if (!usuario) {
+      console.log('Usuario no encontrado con el email:', req.body.email);
+      return res.status(400).send({ error: 'Datos de inicio de sesión inválidos' });
     }
-  };
+
+    // Verificar la contraseña
+    const isMatch = await bcrypt.compare(req.body.password, usuario.password);
+    if (!isMatch) {
+      console.log('Contraseña incorrecta para el usuario:', req.body.email);
+      return res.status(400).send({ error: 'Datos de inicio de sesión inválidos' });
+    }
+
+    // Crear un token para el usuario existente
+    const token = jwt.sign({ _id: usuario._id.toString() }, process.env.JWT_SECRET);
+
+    // Enviar el perfil del usuario y el token como respuesta
+    res.send({ usuario, token });
+  } catch (error) {
+    console.error('Error durante el inicio de sesión:', error);
+    res.status(500).send(error);
+  }
+};
+
   
