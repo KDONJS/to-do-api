@@ -38,6 +38,13 @@ const usuarioSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+
+  tokens: [{
+    token: {
+      type: String,
+      required: true
+    }
+  }]
   
 });
 
@@ -52,6 +59,16 @@ usuarioSchema.pre('save', async function (next) {
 // Método para comparar contraseñas ingresadas con las hasheadas
 usuarioSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
+};
+
+usuarioSchema.methods.generateAuthToken = async function() {
+  const usuario = this;
+  const token = jwt.sign({ _id: usuario._id.toString() }, process.env.JWT_SECRET);
+
+  usuario.tokens = usuario.tokens.concat({ token });
+  await usuario.save();
+
+  return token;
 };
 
 const Usuario = mongoose.model('Usuario', usuarioSchema);

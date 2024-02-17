@@ -28,12 +28,14 @@ exports.iniciarSesionUsuario = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(req.body.password, usuario.password);
-    if (isMatch) {
-      res.send({ message: 'Inicio de sesión exitoso.' });
-    } else {
-      res.status(400).send({ error: 'Contraseña incorrecta.' });
+    if (!isMatch) {
+      return res.status(400).send({ error: 'Contraseña incorrecta.' });
     }
+
+    const token = await usuario.generateAuthToken(); // Genera un nuevo token
+    res.send({ usuario, token, message: 'Inicio de sesión exitoso.' });
   } catch (error) {
+    console.error('Error al iniciar sesión:', error);
     res.status(500).send({ error: 'Error al iniciar sesión.' });
   }
 };
