@@ -66,10 +66,8 @@ usuarioSchema.methods.comparePassword = async function (candidatePassword) {
 usuarioSchema.methods.generateAuthToken = async function() {
   const usuario = this;
   const token = jwt.sign({ _id: usuario._id.toString() }, process.env.JWT_SECRET);
-
   usuario.tokens = usuario.tokens.concat({ token });
   await usuario.save();
-
   return token;
 };
 

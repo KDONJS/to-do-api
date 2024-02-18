@@ -21,6 +21,8 @@ exports.registrarUsuario = async (req, res) => {
     // Asegúrate de no enviar la contraseña en la respuesta
     const usuarioSinPassword = usuario.toObject();
     delete usuarioSinPassword.password;
+    console.log('Registrando con contraseña:', req.body.password);
+
     res.status(201).send({ usuario: usuarioSinPassword, token });
   } catch (error) {
     if (error.name === 'ValidationError') {
@@ -42,6 +44,7 @@ exports.iniciarSesionUsuario = async (req, res) => {
 
     const isMatch = await bcrypt.compare(req.body.password, usuario.password);
     if (!isMatch) {
+      console.log('Intentando iniciar sesión con contraseña:', req.body.password);
       return res.status(400).send({ error: 'Contraseña incorrecta.' });
     }
 
