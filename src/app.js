@@ -2,7 +2,7 @@ require('dotenv').config();
 require('./db/mongose'); // Asegúrate de que la ruta esté correcta
 const express = require('express');
 const app = express();
-
+const bcrypt = require('bcryptjs');
 // Importa los enrutadores
 const tareasRoutes = require('./routers/tareasRoutes');
 const authRoutes = require('./routers/authRoutes'); // Asegúrate de que esta ruta esté correcta
@@ -35,5 +35,17 @@ app.get('/', (req, res) => {
     </html>
   `);
 });
+
+async function testHashAndCompare() {
+  const testPassword = 'Programador2024++';
+  const hashedPassword = await bcrypt.hash(testPassword, 8);
+  console.log('Hashed Password:', hashedPassword);
+
+  const isMatch = await bcrypt.compare(testPassword, hashedPassword);
+  console.log('Does it match?', isMatch ? 'Yes' : 'No');
+}
+
+testHashAndCompare().then(() => console.log('Test finished'));
+
   
 module.exports = app;
