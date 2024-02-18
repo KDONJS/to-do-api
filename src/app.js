@@ -36,16 +36,9 @@ app.get('/', (req, res) => {
   `);
 });
 
-async function testHashAndCompare() {
-  const testPassword = 'Programador2024++';
-  const hashedPassword = await bcrypt.hash(testPassword, 8);
-  console.log('Hashed Password:', hashedPassword);
-
-  const isMatch = await bcrypt.compare(testPassword, hashedPassword);
-  console.log('Does it match?', isMatch ? 'Yes' : 'No');
-}
-
-testHashAndCompare().then(() => console.log('Test finished'));
-
   
-module.exports = app;
+const port = process.env.PORT || 3000;
+
+app.listen(port, () => {
+    console.log(`Servidor corriendo en el puerto ${port}`);
+});
