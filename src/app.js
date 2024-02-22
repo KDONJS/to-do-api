@@ -23,12 +23,52 @@ app.get('/', (req, res) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bienvenido a mi API de Tareas</title>
     <style>
-      body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #121212; color: #e0e0e0; }
-      h1 { color: #bb86fc; }
-      p { color: #b0b0b0; }
-      .endpoint { background-color: #333333; padding: 10px; margin: 20px auto; width: 80%; border-radius: 8px; }
-      .endpoint h2 { color: #03dac5; }
-      .endpoint p { color: #e0e0e0; }
+      :root {
+        --color-fondo: #121212;
+        --color-primario: #bb86fc;
+        --color-secundario: #03dac6;
+        --color-texto: #e0e0e0;
+        --color-sombra: rgba(0, 0, 0, 0.2);
+      }
+      body {
+        font-family: 'Roboto', Arial, sans-serif;
+        text-align: center;
+        margin-top: 50px;
+        background-color: var(--color-fondo);
+        color: var(--color-texto);
+      }
+      h1 {
+        color: var(--color-primario);
+        margin-bottom: 24px;
+      }
+      p {
+        color: var(--color-texto);
+      }
+      .endpoint {
+        background-color: #1e1e1e;
+        padding: 20px;
+        margin: 20px auto;
+        width: 90%;
+        max-width: 800px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px var(--color-sombra);
+        transition: transform 0.3s ease;
+      }
+      .endpoint:hover {
+        transform: translateY(-5px);
+      }
+      .endpoint h2 {
+        color: var(--color-secundario);
+      }
+      .endpoint p {
+        margin: 10px 0;
+        line-height: 1.6;
+      }
+      @media (min-width: 768px) {
+        .endpoint {
+          width: 80%;
+        }
+      }
     </style>
   </head>
   <body>
