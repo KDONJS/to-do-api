@@ -3,27 +3,50 @@ const Usuario = require('../models/usuarioModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+// Funciones auxiliares (Considera añadirlas a tu modelo de usuario)
+const generarJWT = async (usuario) => {
+  const token = jwt.sign({ _id: usuario._id.toString() }, process.env.JWT_SECRET, {
+    expiresIn: '30d', // Puedes personalizar la duración del token 
+  });
 
+  usuario.tokens = usuario.tokens.concat({ token });
+  await usuario.save();
+
+  return token;
+};
+
+// Registrar Usuario
 exports.registrarUsuario = async (req, res) => {
   try {
     const usuario = new Usuario(req.body);
 
     await usuario.save();
+    const token = await generarJWT(usuario);
 
-    const token = await usuario.generateAuthToken();
-    res.status(201).send({ usuario: { ...usuario.toObject(), password: undefined }, token });
+    // Envía la respuesta omitiendo datos sensibles 
+    res.status(201).send({ 
+      usuario: usuario.toPublicJSON(), 
+      token 
+    });
   } catch (error) {
     console.error('Error al registrar el usuario:', error);
+
+    // Manejo de errores para casos de email duplicado
+    if (error.code === 11000) { // Código de error de MongoDB para valores únicos
+      return res.status(400).send({ error: 'El email ya se encuentra registrado.' });
+    }
+
     res.status(500).send({ error: 'Error interno del servidor al registrar usuario.' });
   }
 };
 
+// Editar Usuario
 exports.editarUsuario = async (req, res) => {
   try {
     const updates = Object.keys(req.body);
-    const allowedUpdates = ['email', 'numeroTelefono', 'nombres', 'apellidos', 'fechaNacimiento', 'password']; // Añade aquí los campos permitidos para actualizar
-    const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
+    const allowedUpdates = ['email', 'numeroTelefono', 'nombres', 'apellidos', 'fechaNacimiento', 'password'];
 
+    const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
     if (!isValidOperation) {
       return res.status(400).send({ error: 'Actualizaciones inválidas!' });
     }
@@ -34,13 +57,16 @@ exports.editarUsuario = async (req, res) => {
     }
 
     await req.usuario.save();
-    res.send(req.usuario);
+
+    // Devolver el usuario actualizado ocultando la contraseña
+    res.send(req.usuario.toPublicJSON());
   } catch (error) {
     console.error('Error al editar el usuario:', error);
     res.status(500).send({ error: 'Error al editar el usuario.' });
   }
 };
 
+// Eliminar Usuario 
 exports.eliminarUsuario = async (req, res) => {
   try {
     await req.usuario.remove();
@@ -51,22 +77,21 @@ exports.eliminarUsuario = async (req, res) => {
   }
 };
 
+// Iniciar Sesión
 exports.iniciarSesionUsuario = async (req, res) => {
   try {
-
     const usuario = await Usuario.findOne({ email: req.body.email });
     if (!usuario) {
-      return res.status(400).send({ error: 'Usuario no encontrado.' });
+      return res.status(404).send({ error: 'Usuario no encontrado.' }); // Mejor usar status 404
     }
 
     const isMatch = await bcrypt.compare(req.body.password, usuario.password);
-
     if (!isMatch) {
-      return res.status(400).send({ error: 'Contraseña incorrecta.' });
+      return res.status(401).send({ error: 'Credenciales incorrectas.' }); // Mejor usar status 401
     }
 
-    const token = await usuario.generateAuthToken();
-    res.send({ usuario: { ...usuario.toObject(), password: undefined }, token });
+    const token = await generarJWT(usuario);
+    res.send({ usuario: usuario.toPublicJSON(), token });
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
     res.status(500).send({ error: 'Error al iniciar sesión.' });

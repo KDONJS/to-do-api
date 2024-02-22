@@ -1,25 +1,38 @@
+require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const Usuario = require('../models/usuarioModel');
 
 const auth = async (req, res, next) => {
   try {
-    const token = req.header('Authorization').replace('Bearer ', '');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    // Busca un usuario con el ID decodificado y que tenga el token en su arreglo de tokens.
-    const usuario = await Usuario.findOne({ 
-      _id: decoded._id, 
-      'tokens.token': token 
-    });
 
-    if (!usuario) {
-      throw new Error('No se pudo encontrar el usuario con el token proporcionado.');
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    if (!token) {
+      return res.status(401).send({ error: 'Token no proporcionado.' });
     }
 
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const usuario = await Usuario.findOne({ _id: decoded._id, 'tokens.token': token });
+
+    if (!usuario) {
+      throw new Error('Usuario no encontrado con el token proporcionado');
+    }
+
+    // Si el usuario es encontrado, pasa al siguiente middleware
     req.usuario = usuario;
-    req.token = token; // Guarda el token en el request para uso posterior.
+    req.token = token;
     next();
   } catch (error) {
-    res.status(401).send({ error: 'Por favor autentícate.' });
+    // Captura y maneja errores específicos de JWT además de otros errores
+    console.error('Error en auth middleware:', error.message);
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).send({ error: 'Token inválido.' });
+    } else if (error.name === 'TokenExpiredError') {
+      return res.status(401).send({ error: 'Token expirado.' });
+    } else {
+      return res.status(401).send({ error: 'Por favor autentícate.' });
+    }
   }
 };
 
