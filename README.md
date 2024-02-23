@@ -16,6 +16,8 @@ Esta API te permite gestionar tareas de manera eficiente con autenticación de u
 | Express    | Framework para Node.js                            | ![Express](https://img.shields.io/badge/-Express-000000?style=flat-square&logo=Express&logoColor=white) |
 | MongoDB    | Base de datos NoSQL                               | ![MongoDB](https://img.shields.io/badge/-MongoDB-47A248?style=flat-square&logo=MongoDB&logoColor=white) |
 | JWT        | Autenticación y transmisión de información segura | ![JWT](https://img.shields.io/badge/-JWT-000000?style=flat-square&logo=JSONWebTokens&logoColor=white) |
+| Swagger    | Herramienta de diseño y documentación de API      | ![Swagger](https://img.shields.io/badge/-Swagger-85EA2D?style=flat-square&logo=Swagger&logoColor=white) |
+
 
 ## Endpoints 🌐
 
