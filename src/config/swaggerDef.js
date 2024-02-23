@@ -9,7 +9,7 @@ const swaggerDefinition = {
     },
     servers: [
       {
-        url: `http://localhost:${process.env.PORT}`,
+        url: `${process.env.SERVER}`,
         description: `Servidor de ${process.env.AMBIENTE}`,
       },
     ],
