@@ -32,10 +32,4 @@ app.get('/', (req, res) => {
 });
 
   
-//module.exports = app;
-
-const port = process.env.PORT || 3000;
-
-app.listen(port, () => {
-    console.log(`Servidor corriendo en el puerto ${port}`);
-});
+module.exports = app;
