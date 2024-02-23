@@ -58,7 +58,7 @@ const usuarioSchema = new mongoose.Schema({
   },
   fechaActualizacion: {
     type: Date,
-    default: Date.now // Registra también la fecha de actualización
+    default: Date.now
   },
   activo: {
     type: Boolean,
@@ -69,7 +69,21 @@ const usuarioSchema = new mongoose.Schema({
       type: String,
       required: true
     }
-  }]
+  }],
+  imagenUrl: {
+    type: String,
+    required: false,
+    trim: true,
+    validate(value) {
+      if (!validator.isURL(value)) {
+        throw new Error('URL de la imagen inválida');
+      }
+    }
+  },
+  descripcion: {
+    type: String,
+    required: false
+  },
 });
 
 // Método para hashear la contraseña antes de guardar el usuario
