@@ -15,7 +15,7 @@ const { uploadFile } = require('../middlewares/uploadMiddleware')
 router.post('/registro', upload.single('imagenUrl'), uploadFile ,registrarUsuario);
 router.post('/login', iniciarSesionUsuario);
 router.post('/logout', auth, cerrarSesion);
-router.patch('/me', auth, editarUsuario); 
+router.patch('/me', auth, upload.single('imagenUrl'), editarUsuario);
 router.delete('/me', auth, eliminarUsuario);
 
 module.exports = router;

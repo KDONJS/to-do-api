@@ -70,21 +70,50 @@ exports.registrarUsuario = async (req, res) => {
 exports.editarUsuario = async (req, res) => {
   try {
     const updates = Object.keys(req.body);
-    const allowedUpdates = ['email', 'numeroTelefono', 'nombres', 'apellidos', 'fechaNacimiento', 'password'];
+    const allowedUpdates = ['email', 'numeroTelefono', 'nombres', 'apellidos', 'fechaNacimiento', 'password', 'imagenUrl', 'descripcion'];
 
     const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
     if (!isValidOperation) {
       return res.status(400).send({ error: 'Actualizaciones inválidas!' });
     }
 
-    updates.forEach((update) => req.usuario[update] = req.body[update]);
+    // Procesar la carga de la nueva imagen si se proporciona una
+    if (req.file) {
+      const fileName = `perfil_${req.usuario._id}_${Date.now()}`;
+      const fileUpload = bucket.file(fileName);
+
+      await new Promise((resolve, reject) => {
+        const blobStream = fileUpload.createWriteStream({
+          metadata: {
+            contentType: req.file.mimetype,
+          },
+        });
+
+        blobStream.on('error', (error) => reject(error));
+
+        blobStream.on('finish', async () => {
+          // Actualizar la URL de la imagen en el perfil del usuario
+          req.usuario.imagenUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileUpload.name)}?alt=media`;
+          resolve();
+        });
+
+        blobStream.end(req.file.buffer);
+      });
+    }
+
+    // Actualizar otros campos
+    updates.forEach((update) => {
+      if(update !== 'imagenUrl') {
+        req.usuario[update] = req.body[update];
+      }
+    });
     if (req.body.password) {
       req.usuario.password = await bcrypt.hash(req.body.password, 8);
     }
 
     await req.usuario.save();
 
-    // Devolver el usuario actualizado ocultando la contraseña
+    // Devolver el usuario actualizado ocultando la contraseña y otros datos sensibles
     res.send(req.usuario.toPublicJSON());
   } catch (error) {
     console.error('Error al editar el usuario:', error);

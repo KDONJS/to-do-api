@@ -28,7 +28,14 @@ app.get('/', (req, res) => {
     
     res.send(result);
   });
+  
 });
 
   
-module.exports = app;
+//module.exports = app;
+
+const port = process.env.PORT || 3000;
+
+app.listen(port, () => {
+    console.log(`Servidor corriendo en el puerto ${port}`);
+});
