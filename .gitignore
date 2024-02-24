@@ -128,3 +128,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# no se debe cargar el tema desecretos 
+**/**/secret/*

@@ -2,6 +2,7 @@ require('dotenv').config();
 const Usuario = require('../models/usuarioModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { bucket } = require('../db/firebase');
 
 // Funciones auxiliares (Considera añadirlas a tu modelo de usuario)
 const generarJWT = async (usuario) => {
@@ -15,27 +16,52 @@ const generarJWT = async (usuario) => {
   return token;
 };
 
-// Registrar Usuario
 exports.registrarUsuario = async (req, res) => {
   try {
-    const usuario = new Usuario(req.body);
+    let imageUrl = null;
 
-    await usuario.save();
-    const token = await generarJWT(usuario);
-
-    // Envía la respuesta omitiendo datos sensibles 
-    res.status(201).send({ 
-      usuario: usuario.toPublicJSON(), 
-      token 
-    });
-  } catch (error) {
-    console.error('Error al registrar el usuario:', error);
-
-    // Manejo de errores para casos de email duplicado
-    if (error.code === 11000) { // Código de error de MongoDB para valores únicos
-      return res.status(400).send({ error: 'El email ya se encuentra registrado.' });
+    if (req.body.activo) {
+      req.body.activo = req.body.activo === 'true';
     }
 
+    if (req.file) {
+      const fileName = `perfil_${Date.now()}`;
+      const fileUpload = bucket.file(fileName);
+    
+      await new Promise((resolve, reject) => {
+        const blobStream = fileUpload.createWriteStream({
+          metadata: {
+            contentType: req.file.mimetype,
+          },
+        });
+    
+        blobStream.on('error', (error) => reject(error));
+    
+        blobStream.on('finish', async () => {
+          // Asegúrate de que esta línea coincida con el nombre del campo en tu modelo
+          imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileUpload.name)}?alt=media`;
+          resolve(imageUrl); // Esto correctamente resuelve la URL de la imagen
+        });
+    
+        blobStream.end(req.file.buffer);
+      });
+    }
+
+    const usuarioData = req.body;
+
+    if (imageUrl) {
+      usuarioData.imagenUrl = imageUrl; // Asegúrate de que el campo se llame 'imagenUrl' en tu modelo y aquí
+    }
+
+    const usuario = new Usuario(usuarioData);
+
+    await usuario.save();
+
+    const token = await usuario.generateAuthToken(); 
+
+    res.status(201).send({ usuario: usuario.toPublicJSON(), token });
+  } catch (error) {
+    console.error('Error al registrar el usuario:', error);
     res.status(500).send({ error: 'Error interno del servidor al registrar usuario.' });
   }
 };
@@ -44,21 +70,50 @@ exports.registrarUsuario = async (req, res) => {
 exports.editarUsuario = async (req, res) => {
   try {
     const updates = Object.keys(req.body);
-    const allowedUpdates = ['email', 'numeroTelefono', 'nombres', 'apellidos', 'fechaNacimiento', 'password'];
+    const allowedUpdates = ['email', 'numeroTelefono', 'nombres', 'apellidos', 'fechaNacimiento', 'password', 'imagenUrl', 'descripcion'];
 
     const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
     if (!isValidOperation) {
       return res.status(400).send({ error: 'Actualizaciones inválidas!' });
     }
 
-    updates.forEach((update) => req.usuario[update] = req.body[update]);
+    // Procesar la carga de la nueva imagen si se proporciona una
+    if (req.file) {
+      const fileName = `perfil_${req.usuario._id}_${Date.now()}`;
+      const fileUpload = bucket.file(fileName);
+
+      await new Promise((resolve, reject) => {
+        const blobStream = fileUpload.createWriteStream({
+          metadata: {
+            contentType: req.file.mimetype,
+          },
+        });
+
+        blobStream.on('error', (error) => reject(error));
+
+        blobStream.on('finish', async () => {
+          // Actualizar la URL de la imagen en el perfil del usuario
+          req.usuario.imagenUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileUpload.name)}?alt=media`;
+          resolve();
+        });
+
+        blobStream.end(req.file.buffer);
+      });
+    }
+
+    // Actualizar otros campos
+    updates.forEach((update) => {
+      if(update !== 'imagenUrl') {
+        req.usuario[update] = req.body[update];
+      }
+    });
     if (req.body.password) {
       req.usuario.password = await bcrypt.hash(req.body.password, 8);
     }
 
     await req.usuario.save();
 
-    // Devolver el usuario actualizado ocultando la contraseña
+    // Devolver el usuario actualizado ocultando la contraseña y otros datos sensibles
     res.send(req.usuario.toPublicJSON());
   } catch (error) {
     console.error('Error al editar el usuario:', error);
